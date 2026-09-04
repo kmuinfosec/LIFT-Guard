@@ -1,0 +1,4 @@
+﻿guard,variant,f1,recall,precision
+wildguard,goal (상한),0.858,0.98,0.763
+wildguard,domain-added (처리 없음),0.722,0.972,0.575
+wildguard,제안 (차감 조각 ∪ 원본),0.718,0.989,0.564
