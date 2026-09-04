@@ -1,0 +1,95 @@
+{
+  "version": "1.0.0",
+  "lastScanned": 1788530272449,
+  "projectRoot": "C:\\Users\\seclab\\Desktop\\CISCW-Guards",
+  "techStack": {
+    "languages": [
+      {
+        "name": "Python",
+        "version": null,
+        "confidence": "high",
+        "markers": [
+          "pyproject.toml"
+        ]
+      }
+    ],
+    "frameworks": [],
+    "packageManager": null,
+    "runtime": null
+  },
+  "build": {
+    "buildCommand": null,
+    "testCommand": "pytest",
+    "lintCommand": "ruff check",
+    "devCommand": null,
+    "scripts": {}
+  },
+  "conventions": {
+    "namingStyle": null,
+    "importStyle": null,
+    "testPattern": null,
+    "fileOrganization": null
+  },
+  "structure": {
+    "isMonorepo": false,
+    "workspaces": [],
+    "mainDirectories": [
+      "scripts"
+    ],
+    "gitBranches": null
+  },
+  "customNotes": [],
+  "directoryMap": {
+    "data": {
+      "path": "data",
+      "purpose": "Data files",
+      "fileCount": 4,
+      "lastAccessed": 1788530272428,
+      "keyFiles": [
+        "content_safety.csv",
+        "guard_eval_subset.jsonl",
+        "jbb_benign.csv",
+        "jbb_harmful.csv"
+      ]
+    },
+    "guards": {
+      "path": "guards",
+      "purpose": null,
+      "fileCount": 6,
+      "lastAccessed": 1788530272428,
+      "keyFiles": [
+        "base.py",
+        "granite.py",
+        "nemotron.py",
+        "qwen3guard.py",
+        "wildguard.py"
+      ]
+    },
+    "results": {
+      "path": "results",
+      "purpose": null,
+      "fileCount": 3,
+      "lastAccessed": 1788530272428,
+      "keyFiles": [
+        "agreement.csv",
+        "content_safety_report.csv",
+        "defense_report.csv"
+      ]
+    },
+    "scripts": {
+      "path": "scripts",
+      "purpose": "Build/utility scripts",
+      "fileCount": 6,
+      "lastAccessed": 1788530272429,
+      "keyFiles": [
+        "00_data.py",
+        "01_smoke.py",
+        "02_eval.py",
+        "03_agreement.py",
+        "04_defense.py"
+      ]
+    }
+  },
+  "hotPaths": [],
+  "userDirectives": []
+}

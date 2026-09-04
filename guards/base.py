@@ -63,8 +63,12 @@ class LMGuard:
         import torch
 
         out = np.zeros(len(prompts), dtype=np.float32)
-        for i in range(0, len(prompts), self.batch_size):
-            chunk = [self.build_prompt(p) for p in prompts[i : i + self.batch_size]]
+        # 길이가 제각각이라 그냥 배칭하면 패딩이 배치를 지배한다. 길이순으로 묶고
+        # 결과만 원래 자리로 되돌린다.
+        order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
+        for i in range(0, len(order), self.batch_size):
+            idx = order[i : i + self.batch_size]
+            chunk = [self.build_prompt(prompts[j]) for j in idx]
             enc = self._tok(chunk, return_tensors="pt", padding=True,
                             truncation=True, max_length=4096,
                             add_special_tokens=False).to(self.device)
@@ -74,8 +78,8 @@ class LMGuard:
                                            pad_token_id=self._tok.pad_token_id)
             new = gen[:, enc["input_ids"].shape[1]:]
             texts = self._tok.batch_decode(new, skip_special_tokens=True)
-            for j, t in enumerate(texts):
-                out[i + j] = self.parse_generation(t)
+            for j, t in zip(idx, texts):
+                out[j] = self.parse_generation(t)
         return out
 
     def score_by_token(self, prompts: list[str], pos_word: str, neg_word: str) -> np.ndarray:
@@ -89,15 +93,17 @@ class LMGuard:
         pos = self._tok.encode(pos_word, add_special_tokens=False)[0]
         neg = self._tok.encode(neg_word, add_special_tokens=False)[0]
         out = np.zeros(len(prompts), dtype=np.float32)
-        for i in range(0, len(prompts), self.batch_size):
-            chunk = [self.build_prompt(p) for p in prompts[i : i + self.batch_size]]
+        order = sorted(range(len(prompts)), key=lambda i: len(prompts[i]))
+        for i in range(0, len(order), self.batch_size):
+            idx = order[i : i + self.batch_size]
+            chunk = [self.build_prompt(prompts[j]) for j in idx]
             enc = self._tok(chunk, return_tensors="pt", padding=True,
                             truncation=True, max_length=4096,
                             add_special_tokens=False).to(self.device)
             with torch.no_grad():
                 logits = self._model(**enc).logits[:, -1, :].float()
             pair = torch.stack([logits[:, neg], logits[:, pos]], dim=-1)
-            out[i : i + self.batch_size] = pair.softmax(-1)[:, 1].cpu().numpy()
+            out[idx] = pair.softmax(-1)[:, 1].cpu().numpy()
         return out
 
     @property

@@ -7,9 +7,12 @@
   original : 원본 프롬프트 (처리 없음)
   goal     : 탈옥 목표 문장만 (상한)
   chunks   : 차감 후 남은 조각들 -> 각각 채점 후 최댓값
+  rw_<mode>: 05_rewrite.py 의 LLM 역재작성문 (--rewrite 로 켠다)
 
-제안 기법은 max(original, chunks) 다. 차감이 유해 의도까지 지우는 경우가 있어 원본
-점수를 하한으로 둔다.
+결합은 두 가지를 다 낸다. max(원본, 처리본) 은 처리가 유해 의도까지 지우는 경우에
+대비해 원본을 하한으로 두는 안이고, 단독은 처리본으로 원본을 아예 갈아치우는 안이다.
+이 데이터셋의 오류는 FN 이 아니라 FP 가 지배적이라(WildGuard 기준 FN 49 / FP 1258)
+max 는 구조적으로 precision 을 깎는다. 그래서 단독도 같이 잰다.
 """
 
 from __future__ import annotations
@@ -29,18 +32,35 @@ from paths import DATA, GUARD_LABEL, RESULTS  # noqa: E402
 
 
 def load_rows() -> list[dict]:
-    p = DATA / "guard_eval_subset.jsonl"
+    p = DATA / "eval_set.jsonl"
     return [json.loads(l) for l in p.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
-def score_variants(key: str, rows: list[dict]) -> dict[str, np.ndarray]:
+def load_rewrites(mode: str, rows: list[dict]) -> list[str]:
+    """05_rewrite.py 산출을 uid 로 맞춰 읽는다."""
+    p = DATA / "rewrites" / f"{mode}.jsonl"
+    if not p.is_file():
+        sys.exit(f"재작성 없음: {p}  ->  uv run python scripts/05_rewrite.py --mode {mode}")
+    by_uid = {}
+    for l in p.read_text(encoding="utf-8").splitlines():
+        if l.strip():
+            d = json.loads(l)
+            by_uid[d["uid"]] = d["rewrite"]
+    miss = sum(1 for r in rows if r["uid"] not in by_uid)
+    if miss:
+        sys.exit(f"재작성 누락 {miss:,}건. 05_rewrite.py --mode {mode} 를 마저 돌릴 것.")
+    return [by_uid[r["uid"]] for r in rows]
+
+
+def score_variants(key: str, rows: list[dict], modes: list[str],
+                   batch_size: int = 16) -> dict[str, np.ndarray]:
     """세 벌을 채점한다. 결과는 variant 별로 캐시한다."""
     cache_dir = RESULTS / "defense_scores"
     cache_dir.mkdir(parents=True, exist_ok=True)
     groups = {
         "original": [[r["original"]] for r in rows],
         "goal": [[r["goal"]] for r in rows],
-        "chunks": [r["chunks"] or [r["original"]] for r in rows],
+        **{f"rw_{m}": [[t] for t in load_rewrites(m, rows)] for m in modes},
     }
     out: dict[str, np.ndarray] = {}
     guard = None
@@ -56,7 +76,7 @@ def score_variants(key: str, rows: list[dict]) -> dict[str, np.ndarray]:
             from guards import load
 
             print(f"[{key}] 로딩...")
-            guard = load(key)
+            guard = load(key, batch_size=batch_size)
         # 가변 길이 그룹을 평탄화해 한 번에 채점하고 그룹별 최댓값을 취한다.
         flat, bounds = [], []
         for grp in g:
@@ -77,6 +97,9 @@ def score_variants(key: str, rows: list[dict]) -> dict[str, np.ndarray]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("guards", nargs="+")
+    ap.add_argument("--rewrite", nargs="*", default=[], metavar="MODE",
+                    help="역재작성 모드. neutral / intent")
+    ap.add_argument("--batch-size", type=int, default=32)
     args = ap.parse_args()
 
     rows = load_rows()
@@ -87,12 +110,14 @@ def main() -> None:
 
     report = []
     for key in args.guards:
-        sc = score_variants(key, rows)
+        sc = score_variants(key, rows, args.rewrite, args.batch_size)
         variants = {
             "goal (상한)": sc["goal"],
             "domain-added (처리 없음)": sc["original"],
-            "제안 (차감 조각 ∪ 원본)": np.maximum(sc["original"], sc["chunks"]),
         }
+        for m in args.rewrite:
+            variants[f"역재작성 {m} 단독"] = sc[f"rw_{m}"]
+            variants[f"역재작성 {m} ∪ 원본"] = np.maximum(sc["original"], sc[f"rw_{m}"])
         print(f"\n=== {GUARD_LABEL.get(key, key)} ===")
         print(f"{'':28s} {'F1':>7s} {'Recall':>8s} {'Precision':>10s}")
         print("-" * 58)

@@ -72,7 +72,11 @@ Granite 의 눈금이 0.5 에 맞지 않아 생기는 착시다.
 
 ## 실행
 
-GPU 서버(4090)에서 돈다.
+GPU 서버에서 돈다. **Pro6000 에서는 GPU 0 만 쓴다** (GPU 1 은 다른 작업용):
+
+```bash
+export CUDA_VISIBLE_DEVICES=0
+```
 
 ```bash
 ./setup.sh --extra gpu          # torch, transformers, peft 설치
@@ -84,7 +88,26 @@ uv run python scripts/01_smoke.py qwen3guard
 # 평가. 점수는 results/scores/<guard>.csv 에 캐시된다.
 uv run python scripts/02_eval.py granite qwen3guard wildguard nemotron
 uv run python scripts/03_agreement.py    # guard 간 일치도 (GPU 불필요)
+
+# 방어. 역재작성은 uid 단위로 이어쓰므로 끊겨도 다시 돌리면 남은 것만 한다.
+uv run python scripts/05_rewrite.py --mode neutral --dry --limit 1   # 프롬프트 눈으로 확인
+uv run python scripts/05_rewrite.py --mode neutral
+uv run python scripts/05_rewrite.py --mode intent
+uv run python scripts/04_defense.py wildguard --rewrite neutral intent
 ```
+
+### 역재작성 (05_rewrite.py)
+
+시스템 프롬프트 요약 S 를 조건으로 주고 도메인 위장을 LLM 으로 되돌린다.
+`neutral` 은 도메인만 걷어내고 탈옥 전략 지시는 남기며, `intent` 는 전략 래퍼까지
+걷어낸다. 04_defense 는 각 모드를 `단독`(원본을 갈아치움)과 `∪ 원본`(max) 두 결합으로
+낸다.
+
+WildGuard 캐시 기준 이 데이터셋의 오류 구성은 **FN 49 / FP 1258** (positive 1,750 /
+negative 1,697) 이다. recall 은 이미 0.972 라 여유가 없고, hard negative 의 74% 가
+이미 flag 된다. guard 가 goal 이 아니라 전략 래퍼에 반응한다는 뜻이다. `goal` 만
+채점하면 FP 가 1,258 → 533 으로 떨어지는데 이득이 전부 거기서 나온다. 따라서 max 결합은
+구조적으로 precision 만 깎는다. 단독 결합과 `intent` 모드를 같이 재는 이유다.
 
 우선순위: `qwen3guard` → `wildguard` → `nemotron`. Granite 은 기준으로 유지한다.
 
