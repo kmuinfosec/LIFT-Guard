@@ -1,7 +1,0 @@
-{
-  "tool_name": "Bash",
-  "tool_input_preview": "{\"command\":\"cd ~/Desktop/CISCW-Guards && cat > /tmp/asym2.py <<'PYEOF'\\nimport json, re, glob, os, statistics as st\\nW = re.compile(r\\\"\\\\w+\\\")\\nrows = {r[\\\"uid\\\"]: r for r in (json.loads(l) for l in o...",
-  "error": "Exit code 1\nvariant          label      n  len_ratio  goal_cov\n----------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/asym2.py\", line 9, in <module>\n    d = json.loads(l); r = rows[d[\"uid\"]]\n                           ~~~~^^^^^^^^^^\nKeyError: 'neg-exp151-0'",
-  "timestamp": "2026-09-04T15:59:00.953Z",
-  "retry_count": 1
-}

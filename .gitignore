@@ -3,3 +3,4 @@ __pycache__/
 .venv/
 data/jbb_*.csv
 data/guard_eval_subset.jsonl
+.omc/
