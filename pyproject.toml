@@ -1,0 +1,27 @@
+[project]
+name = "ciscw-guards"
+version = "0.1.0"
+description = "실험 A: content-safety guard 들을 JBB harmful vs topic-matched hard negatives 로 평가"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=2.0",
+    "pandas>=2.2",
+    "scikit-learn>=1.5",
+    "matplotlib>=3.9",
+    "huggingface-hub>=0.24",
+]
+
+[project.optional-dependencies]
+# guard 모델 추론. GPU 서버에서만 필요하다.
+gpu = [
+    "torch>=2.4",
+    "transformers>=4.51",
+    "accelerate>=0.34",
+    "peft>=0.13",          # Nemotron 은 Llama-3.1-8B 위의 LoRA 어댑터다
+    "sentencepiece>=0.2",
+    "truststore>=0.9",
+]
+
+[tool.uv]
+package = false
+native-tls = true
