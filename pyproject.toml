@@ -19,6 +19,8 @@ gpu = [
     "accelerate>=0.34",
     "peft>=0.13",          # Nemotron 은 Llama-3.1-8B 위의 LoRA 어댑터다
     "sentencepiece>=0.2",
+    # WildGuard 는 Mistral 계열 sentencepiece 토크나이저라 변환에 protobuf 가 필요하다
+    "protobuf>=5.0",
     "truststore>=0.9",
 ]
 

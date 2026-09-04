@@ -2,4 +2,3 @@ __pycache__/
 *.pyc
 .venv/
 data/jbb_*.csv
-results/scores/
