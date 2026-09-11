@@ -1,4 +1,0 @@
-﻿guard,model,auroc,f1@0.5,precision@0.5,recall@0.5,harmful_flagged,benign_flagged,n_pos,n_neg
-granite,Granite Guardian 3.0 2B,0.912,0.694,0.532,1.0,100,88,100,100
-qwen3guard,Qwen3Guard-Gen-4B,0.695,0.766,0.621,1.0,100,61,100,100
-wildguard,WildGuard 7B,0.77,0.811,0.688,0.99,99,45,100,100

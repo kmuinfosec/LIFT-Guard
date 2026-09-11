@@ -1,29 +1,18 @@
 [project]
-name = "ciscw-guards"
+name = "lift-guard"
 version = "0.1.0"
-description = "실험 A: content-safety guard 들을 JBB harmful vs topic-matched hard negatives 로 평가"
-requires-python = ">=3.11"
+description = "Sliding-window scoring that recovers guard accuracy on domain-adapted jailbreaks"
+readme = "README.md"
+requires-python = ">=3.10"
 dependencies = [
-    "numpy>=2.0",
-    "pandas>=2.2",
-    "scikit-learn>=1.5",
-    "matplotlib>=3.9",
-    "huggingface-hub>=0.24",
+    "numpy>=1.24",
+    "torch>=2.1",
+    "transformers>=4.40",
 ]
 
-[project.optional-dependencies]
-# guard 모델 추론. GPU 서버에서만 필요하다.
-gpu = [
-    "torch>=2.4",
-    "transformers>=4.51",
-    "accelerate>=0.34",
-    "peft>=0.13",          # Nemotron 은 Llama-3.1-8B 위의 LoRA 어댑터다
-    "sentencepiece>=0.2",
-    # WildGuard 는 Mistral 계열 sentencepiece 토크나이저라 변환에 protobuf 가 필요하다
-    "protobuf>=5.0",
-    "truststore>=0.9",
-]
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.uv]
-package = false
-native-tls = true
+[tool.hatch.build.targets.wheel]
+packages = ["lift_guard"]

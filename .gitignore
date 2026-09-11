@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
 .venv/
-data/jbb_*.csv
-data/guard_eval_subset.jsonl
-.omc/
+dist/
+build/
+*.egg-info/
